@@ -27,11 +27,11 @@ class CardTabBarView: UITabBar {
         stackView.distribution = .equalSpacing
         stackView.alignment = .fill
     }
-
+    
     private lazy var backgroundShadowView: UIImageView = .build { imageView in
         imageView.image = UIImage(named: "tabbar_bg")
     }
-
+    
     fileprivate lazy var container: UIView = .build()
     
     // MARK: - Override
@@ -49,7 +49,7 @@ class CardTabBarView: UITabBar {
         set { container.backgroundColor = newValue }
         get { return container.backgroundColor }
     }
-
+    
     // MARK: - Init
     override init(frame: CGRect) {
         super.init(frame: frame)
@@ -59,31 +59,31 @@ class CardTabBarView: UITabBar {
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
-
+    
     // MARK: - Lifecycle
     override func layoutSubviews() {
         super.layoutSubviews()
         container.layer.cornerRadius = container.bounds.height / 2
         addShadow()
     }
-
+    
     override func setItems(_ items: [UITabBarItem]?, animated: Bool) {
         super.setItems(items, animated: animated)
         reloadViews()
     }
-
+    
     // MARK: - UI
     private func setupUI() {
         barTintColor = .barTintColor
         backgroundColor = .backgroundColor
         tintColor = .label
         indicatorColor = .tintColor
-       
+        
         backgroundImage = UIImage()
         shadowImage = UIImage()
         setupConstraint()
     }
-
+    
     private func setupConstraint() {
         addSubview(backgroundShadowView)
         addSubview(container)
@@ -94,7 +94,7 @@ class CardTabBarView: UITabBar {
             container.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -CardTabBarViewUI.padding),
             container.bottomAnchor.constraint(equalTo: safeAreaLayoutGuide.bottomAnchor, constant: -CardTabBarViewUI.padding),
             container.heightAnchor.constraint(equalToConstant: 60),
-
+            
             stackView.bottomAnchor.constraint(equalTo: container.bottomAnchor),
             stackView.topAnchor.constraint(equalTo: container.topAnchor),
             stackView.leadingAnchor.constraint(equalTo: container.leadingAnchor, constant: CardTabBarViewUI.padding),
@@ -106,43 +106,55 @@ class CardTabBarView: UITabBar {
             backgroundShadowView.topAnchor.constraint(equalTo: topAnchor, constant: -40)
         ])
     }
-
+    
     func select(at index: Int) {
         UIView.animate(withDuration: 0.14) {
             for (_index, view) in self.stackView.arrangedSubviews.enumerated() {
                 guard let barItemView = view as? BarItemView else { return }
+                if index == 1 {
+                    barItemView.isCart = true
+                }else {
+                    barItemView.isCart = false
+                }
                 barItemView.isSelected = _index == index
             }
             self.layoutIfNeeded()
         }
     }
-
+    
     private func reloadViews() {
         subviews.filter { String(describing: type(of: $0)) == "UITabBarButton" }.forEach { $0.removeFromSuperview() }
         stackView.removeAllArrangedSubviews()
-
+        
         guard let items = items else { return }
-
+        
         for (index, item) in items.enumerated() {
             addButton(with: item, tag: index)
         }
     }
-
+    
     private func addButton(with item: UITabBarItem, tag: Int) {
         let buttonView = BarItemView(item: item)
         buttonView.tintColor = barItemColor
         buttonView.button.tag = tag
-        buttonView.button.addTarget(self, action: #selector(buttonTapped(sender:)), for: .touchUpInside)
 
+        buttonView.button.addTarget(self, action: #selector(buttonTapped(sender:)), for: .touchUpInside)
+        
+        let tappy = UITapGestureRecognizer(target: self, action: #selector(CardTabBarView.tapFunction))
+        buttonView.labelTitle.isUserInteractionEnabled = true
+        buttonView.labelTitle.addGestureRecognizer(tappy)
+        buttonView.labelTitle.tag = tag
+        tappy.view?.largeContentTitle = "\(tag)"
+        
         if selectedItem != nil && item === selectedItem {
             buttonView.isSelected = true
         } else {
             buttonView.isSelected = false
         }
-
+        
         stackView.addArrangedSubview(buttonView)
     }
-
+    
     private func addShadow() {
         layer.masksToBounds = false
         layer.shadowColor = UIColor.black.cgColor
@@ -150,7 +162,7 @@ class CardTabBarView: UITabBar {
         layer.shadowRadius = 13
         layer.shadowOpacity = 0.05
     }
-
+    
     // MARK: - Actions
     @objc func buttonTapped(sender: BarButton) {
         let index = sender.tag
@@ -159,6 +171,15 @@ class CardTabBarView: UITabBar {
         didSelectItemAt?(index)
         delegate?.tabBar?(self, didSelect: item)
     }
+    
+    @objc func tapFunction(sender:UITapGestureRecognizer) {
+        let index = Int(sender.view?.largeContentTitle ?? "") ?? 0
+        guard let item = items?[index] else { return }
+        
+        didSelectItemAt?(index)
+        delegate?.tabBar?(self, didSelect: item)
+    }
+    
 }
 
 

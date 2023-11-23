@@ -18,7 +18,7 @@ class BarItemView: UIView {
     // MARK: - Views
     lazy var indicatorView: UIView = .build()
 
-    private lazy var labelTitle: UILabel = .build { label in
+    var labelTitle: UILabel = .build { label in
         label.font = UIFont.systemFont(ofSize: 14, weight: .semibold)
     }
 
@@ -29,13 +29,17 @@ class BarItemView: UIView {
     var titleLeadingConstraint: NSLayoutConstraint? = nil
     var button: BarButton!
 
+    var isCart: Bool = false
     var isSelected: Bool = false {
         didSet {
-            indicatorView.alpha = isSelected ? 1 : 0
-            widthConstraint?.constant = isSelected ? Options.maxWidth : Options.minWidth
-            
-            labelTitle.alpha = isSelected ? 1 : 0
-            titleLeadingConstraint?.isActive = isSelected
+            if isCart {
+                indicatorView.alpha = 0
+            }else {
+                indicatorView.alpha = isSelected ? 1 : 0
+            }
+            widthConstraint?.constant = Options.maxWidth //isSelected ? Options.maxWidth : Options.minWidth
+            labelTitle.alpha = 1 // isSelected ? 1 : 0
+            titleLeadingConstraint?.isActive = true //isSelected
             button.isSelected = isSelected
         }
     }
@@ -91,6 +95,7 @@ class BarItemView: UIView {
             
             labelTitle.centerYAnchor.constraint(equalTo: viewContainer.centerYAnchor),
             labelTitle.trailingAnchor.constraint(equalTo: viewContainer.trailingAnchor, constant: -4),
+
         ])
         
         widthConstraint = viewContainer.widthAnchor.constraint(equalToConstant: 44)
