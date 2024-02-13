@@ -44,11 +44,13 @@ class CardTabBarView: UITabBar {
         set { barItemColor = newValue }
         get { return barItemColor }
     }
-    
+        
     override var barTintColor: UIColor? {
         set { container.backgroundColor = newValue }
         get { return container.backgroundColor }
     }
+    
+    var isArabicLanguage: Bool? = false
     
     // MARK: - Init
     override init(frame: CGRect) {
@@ -82,6 +84,15 @@ class CardTabBarView: UITabBar {
         backgroundImage = UIImage()
         shadowImage = UIImage()
         setupConstraint()
+        
+        let userdef = UserDefaults.standard
+        let langArray = userdef.object(forKey: "AppleLanguages") as! NSArray
+        let current = langArray.firstObject as! String
+        if current == "ar" {
+            isArabicLanguage = true
+        }else {
+            isArabicLanguage = false
+        }
     }
     
     private func setupConstraint() {
@@ -117,6 +128,12 @@ class CardTabBarView: UITabBar {
                     barItemView.isCart = false
                 }
                 barItemView.isSelected = _index == index
+                
+                if barItemView.isSelected {
+                    barItemView.tintColor = self.tintColor
+                }else {
+                    barItemView.tintColor = self.unselectedItemTintColor
+                }
             }
             self.layoutIfNeeded()
         }
@@ -144,6 +161,9 @@ class CardTabBarView: UITabBar {
         buttonView.labelTitle.isUserInteractionEnabled = true
         buttonView.labelTitle.addGestureRecognizer(tappy)
         buttonView.labelTitle.tag = tag
+        buttonView.labelTitle.font = UIFont(name: "NotoSansArabicCondensed-Medium", size: 14)
+        buttonView.labelTitle.semanticContentAttribute = (isArabicLanguage ?? false) ? .forceRightToLeft : .forceLeftToRight
+        buttonView.labelTitle.textAlignment = (isArabicLanguage ?? false) ? .right : .left
         tappy.view?.largeContentTitle = "\(tag)"
         
         if selectedItem != nil && item === selectedItem {
